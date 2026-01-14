@@ -1,0 +1,5 @@
+{
+  "name": "Conversor de Querosene de Aviação",
+  "description": "Uma ferramenta para converter unidades de querosene de aviação (Libras, Litros, Quilos) com um design inspirado em cockpit de aeronave.",
+  "requestFramePermissions": []
+}
