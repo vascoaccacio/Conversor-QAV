@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Conversor de Querosene de Aviação</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <style>
       body {
         font-family: 'Orbitron', sans-serif;
@@ -20,19 +23,174 @@
         -moz-appearance: none;
         appearance: none;
       }
+      /* Remove setas de incremento/decremento do input number */
+      input[type=number]::-webkit-inner-spin-button, 
+      input[type=number]::-webkit-outer-spin-button { 
+        -webkit-appearance: none; 
+        margin: 0; 
+      }
+      input[type=number] {
+        -moz-appearance: textfield;
+      }
     </style>
   <script type="importmap">
 {
   "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3"
+    "react/": "https://esm.sh/react@^19.2.3/"
   }
 }
 </script>
 </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
+    <noscript>Você precisa habilitar o JavaScript para usar este aplicativo.</noscript>
+    
+    <main class="bg-black text-white min-h-screen flex flex-col items-center justify-center p-4 font-mono antialiased">
+      <div class="w-full max-w-sm mx-auto">
+        <h1 class="text-3xl font-bold mb-10 text-center text-yellow-400 drop-shadow-[0_0_5px_#ffff00]">
+          Conversor de Unidades para Querosene de Aviação
+        </h1>
+
+        <div class="space-y-6">
+          <!-- Input Unit -->
+          <div>
+            <label for="fromUnit" class="block text-sm text-yellow-400 uppercase tracking-widest mb-2 text-center">Unidade de Entrada</label>
+            <select id="fromUnit" class="w-full bg-black text-white text-center text-lg p-3 border-2 border-yellow-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-300 shadow-[0_0_10px_rgba(255,255,0,0.5),inset_0_0_5px_rgba(255,255,0,0.3)] transition-shadow duration-300 custom-select">
+              <option value="Libras" class="bg-black text-white">Libras</option>
+              <option value="Litros" class="bg-black text-white">Litros</option>
+              <option value="Quilos" class="bg-black text-white">Quilos</option>
+            </select>
+          </div>
+
+          <!-- Value -->
+          <div>
+            <label for="value" class="block text-sm text-yellow-400 uppercase tracking-widest mb-2 text-center">Valor</label>
+            <input id="value" type="number" value="100.00" placeholder="0.00" class="w-full bg-black text-white text-center text-lg p-3 border-2 border-yellow-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-300 shadow-[0_0_10px_rgba(255,255,0,0.5),inset_0_0_5px_rgba(255,255,0,0.3)] transition-shadow duration-300">
+          </div>
+
+          <!-- Output Unit -->
+          <div>
+            <label for="toUnit" class="block text-sm text-yellow-400 uppercase tracking-widest mb-2 text-center">Unidade de Saída</label>
+            <select id="toUnit" class="w-full bg-black text-white text-center text-lg p-3 border-2 border-yellow-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-300 shadow-[0_0_10px_rgba(255,255,0,0.5),inset_0_0_5px_rgba(255,255,0,0.3)] transition-shadow duration-300 custom-select">
+              <option value="Libras" class="bg-black text-white">Libras</option>
+              <option value="Litros" class="bg-black text-white">Litros</option>
+              <option value="Quilos" selected class="bg-black text-white">Quilos</option>
+            </select>
+          </div>
+
+          <!-- Result -->
+          <div>
+            <label class="block text-sm text-yellow-400 uppercase tracking-widest mb-2 text-center">Resultado</label>
+            <div id="result-container" class="flex items-center justify-center h-28 w-full bg-black text-white text-center text-lg p-3 border-2 border-yellow-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-300 shadow-[0_0_10px_rgba(255,255,0,0.5),inset_0_0_5px_rgba(255,255,0,0.3)] transition-shadow duration-300">
+              <!-- O resultado será inserido aqui pelo JS -->
+            </div>
+          </div>
+          
+          <!-- Clear Button -->
+          <button id="clear-button" class="w-full bg-black text-white text-center text-lg p-3 border-2 border-yellow-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-300 shadow-[0_0_10px_rgba(255,255,0,0.5),inset_0_0_5px_rgba(255,255,0,0.3)] transition-shadow duration-300 font-bold uppercase tracking-widest hover:bg-yellow-400 hover:text-black transition-colors duration-300">
+            Limpar
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        // --- CONSTANTES E SELETORES DO DOM ---
+        const LBS_PER_LITER = 1.76;
+        const KG_PER_LITER = 0.8;
+        
+        const Unit = {
+          LBS: 'Libras',
+          L: 'Litros',
+          KG: 'Quilos',
+        };
+
+        const unitAbbreviations = {
+          [Unit.LBS]: 'Lbs',
+          [Unit.L]: 'L',
+          [Unit.KG]: 'Kg',
+        };
+
+        const fromUnitSelect = document.getElementById('fromUnit');
+        const toUnitSelect = document.getElementById('toUnit');
+        const valueInput = document.getElementById('value');
+        const resultContainer = document.getElementById('result-container');
+        const clearButton = document.getElementById('clear-button');
+
+        // --- FUNÇÃO DE CÁLCULO ---
+        const calculateConversion = () => {
+          const fromUnit = fromUnitSelect.value;
+          const toUnit = toUnitSelect.value;
+          const value = parseFloat(valueInput.value);
+
+          // Validação de erro
+          if (fromUnit === toUnit) {
+            resultContainer.innerHTML = `<span class="text-red-500 text-base">Selecione unidades diferentes</span>`;
+            return;
+          }
+
+          if (isNaN(value)) {
+             resultContainer.innerHTML = `<span class="text-5xl font-bold tracking-wider">0.00<span class="text-3xl ml-2 align-baseline text-yellow-400">${unitAbbreviations[toUnit]}</span></span>`;
+             return;
+          }
+
+          // Lógica de conversão
+          let valueInLiters = 0;
+          switch (fromUnit) {
+            case Unit.LBS:
+              valueInLiters = value / LBS_PER_LITER;
+              break;
+            case Unit.KG:
+              valueInLiters = value / KG_PER_LITER;
+              break;
+            case Unit.L:
+            default:
+              valueInLiters = value;
+              break;
+          }
+
+          let convertedValue = 0;
+          switch (toUnit) {
+            case Unit.LBS:
+              convertedValue = valueInLiters * LBS_PER_LITER;
+              break;
+            case Unit.KG:
+              convertedValue = valueInLiters * KG_PER_LITER;
+              break;
+            case Unit.L:
+            default:
+              convertedValue = valueInLiters;
+              break;
+          }
+
+          const resultAbbreviation = unitAbbreviations[toUnit];
+          resultContainer.innerHTML = `
+            <span class="text-5xl font-bold tracking-wider">
+              ${convertedValue.toFixed(2)}
+              <span class="text-3xl ml-2 align-baseline text-yellow-400">${resultAbbreviation}</span>
+            </span>
+          `;
+        };
+
+        // --- FUNÇÃO DE LIMPAR ---
+        const handleClear = () => {
+            valueInput.value = '';
+            fromUnitSelect.value = Unit.LBS;
+            toUnitSelect.value = Unit.KG;
+            calculateConversion();
+        };
+
+        // --- EVENT LISTENERS ---
+        fromUnitSelect.addEventListener('change', calculateConversion);
+        toUnitSelect.addEventListener('change', calculateConversion);
+        valueInput.addEventListener('input', calculateConversion);
+        clearButton.addEventListener('click', handleClear);
+
+        // --- CHAMADA INICIAL ---
+        calculateConversion();
+      });
+    </script>
   </body>
 </html>
